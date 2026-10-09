@@ -1,55 +1,440 @@
+
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
     {% load static %}
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Exam Results - {{ course.name }}</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet"
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+    <style>
+        body {
+            background-color: #f5f7fa;
+        }
+
+        .result-container {
+            max-width: 950px;
+            margin: 40px auto;
+        }
+
+        .result-card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .score-number {
+            font-size: 48px;
+            font-weight: bold;
+        }
+
+        .question-card {
+            margin-bottom: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .answer-item {
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+        }
+
+        .correct-answer {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .wrong-answer {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
 </head>
+
 <body>
 
- <nav class="navbar navbar-light bg-light">
-    <div class="container-fluid">
-        <div class="navbar-header">
-              <a class="navbar-brand" href="{% url 'onlinecourse:index' %}">Home</a>
-        </div>
-        <ul class="nav navbar-nav navbar-right">
-            {% if user.is_authenticated %}
-            <li>
-                <a class="btn btn-link" href="#">{{ user.first_name }}({{ user.username }})</a>
-                <a class="btn btn-link" href="{% url 'onlinecourse:logout' %}">Logout</a>
-            </li>
-            {% else %}
-            <li>
-                <form class="form-inline" action="{% url 'onlinecourse:login' %}" method="post">
-                    {% csrf_token %}
-                    <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Username" name="username" >
-                        <input type="password" class="form-control" placeholder="Username" name="psw" >
-                        <button class="btn btn-primary" type="submit">Login</button>
-                        <a class="btn btn-link" href="{% url 'onlinecourse:registration' %}">Sign Up</a>
-                    </div>
-                </form>
-            </li>
-            {% endif %}
-        </ul>
-    </div>
-</nav>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-light bg-light shadow-sm">
 
-<div class="container-fluid">
-    {% if grade > 80 %}
-    <div class="alert alert-success">
-       <!--HINT Display passed info -->
-    </div>
+        <a class="navbar-brand"
+           href="{% url 'onlinecourse:index' %}">
+            Online Course
+        </a>
+
+        <a class="btn btn-outline-primary"
+           href="{% url 'onlinecourse:index' %}">
+            Back to Courses
+        </a>
+
+    </nav>
+
+
+    <div class="container result-container">
+
+        <h2 class="text-center mb-3">
+            Examination Results
+        </h2>
+
+        <h5 class="text-center text-muted mb-4">
+            {{ course.name }}
+        </h5>
+
+
+        <!-- EXAM PASS RESULT -->
+
+        {% if passed %}
+
+        <div class="card result-card mb-4">
+
+            <div class="card-body text-center p-5">
+
+                <h2 class="text-success">
+                    Congratulations!
+                </h2>
+
+                <h4 class="mt-3">
+                    You have successfully passed the exam!
+                </h4>
+
+                <p class="text-muted mt-3">
+                    Well done! You have demonstrated your
+                    understanding of this course.
+                </p>
+
+                <div class="score-number text-success mt-4">
+                    {{ grade }}%
+                </div>
+
+                <h5 class="mt-2">
+                    Final Score
+                </h5>
+
+                <p class="text-muted">
+                    You earned {{ score }} out of
+                    {{ total_points }} points.
+                </p>
+
+                <div class="alert alert-success mt-4">
+                    Exam Status:
+                    <strong>PASSED</strong>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- EXAM FAIL RESULT -->
+
         {% else %}
-        <div class="alert alert-danger">
-            <!--HINT Display failed info -->
+
+        <div class="card result-card mb-4">
+
+            <div class="card-body text-center p-5">
+
+                <h2 class="text-danger">
+                    You Did Not Pass the Exam
+                </h2>
+
+                <p class="text-muted mt-3">
+                    Unfortunately, your score did not
+                    meet the passing requirement.
+                </p>
+
+                <div class="score-number text-danger mt-4">
+                    {{ grade }}%
+                </div>
+
+                <h5 class="mt-2">
+                    Final Score
+                </h5>
+
+                <p class="text-muted">
+                    You earned {{ score }} out of
+                    {{ total_points }} points.
+                </p>
+
+                <div class="alert alert-danger mt-4">
+                    Exam Status:
+                    <strong>FAILED</strong>
+                </div>
+
+                <p>
+                    You need more than 80% to pass.
+                </p>
+
+                <a class="btn btn-warning btn-lg mt-3"
+                   href="{% url 'onlinecourse:course_details' course.id %}">
+                    Re-test Exam
+                </a>
+
+            </div>
+
         </div>
-        <a class="btn btn-link text-danger" href="{% url 'onlinecourse:course_details' course.id %}">Re-test</a>
+
         {% endif %}
-        <div class="card-columns-vertical mt-1">
-        <h5 class="">Exam results</h5>
-            <!--HINT Display exam results-->
+
+
+        <!-- DETAILED EXAM RESULTS -->
+
+        <div class="card result-card mb-4">
+
+            <div class="card-header bg-primary text-white">
+
+                <h4 class="mb-0">
+                    Detailed Exam Results
+                </h4>
+
+            </div>
+
+            <div class="card-body">
+
+                <p class="text-muted">
+                    Review your answers and compare them
+                    with the correct answers below.
+                </p>
+
+
+                {% for result in question_results %}
+
+                <div class="card question-card">
+
+                    <div class="card-header">
+
+                        <div class="d-flex justify-content-between
+                                    align-items-center">
+
+                            <h5 class="mb-0">
+                                Question {{ forloop.counter }}
+                            </h5>
+
+                            {% if result.is_correct %}
+
+                            <span class="badge badge-success p-2">
+                                Correct
+                            </span>
+
+                            {% else %}
+
+                            <span class="badge badge-danger p-2">
+                                Incorrect
+                            </span>
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="card-body">
+
+                        <!-- Question Text -->
+
+                        <h5>
+                            {{ result.question.question_text }}
+                        </h5>
+
+
+                        <!-- Points Awarded -->
+
+                        <p class="mt-3">
+
+                            <strong>Points Earned:</strong>
+
+                            <span class="badge badge-info">
+                                {{ result.points_awarded }}
+                                /
+                                {{ result.question.grade }}
+                            </span>
+
+                        </p>
+
+
+                        <!-- Selected Answers -->
+
+                        <h6 class="mt-4">
+                            Your Selected Answers:
+                        </h6>
+
+                        {% for choice in result.selected_choices %}
+
+                            {% if choice.is_correct %}
+
+                            <div class="answer-item correct-answer">
+
+                                &#10004;
+                                {{ choice.choice_text }}
+
+                                <span class="float-right">
+                                    Correct Choice
+                                </span>
+
+                            </div>
+
+                            {% else %}
+
+                            <div class="answer-item wrong-answer">
+
+                                &#10008;
+                                {{ choice.choice_text }}
+
+                                <span class="float-right">
+                                    Incorrect Choice
+                                </span>
+
+                            </div>
+
+                            {% endif %}
+
+                        {% empty %}
+
+                        <div class="alert alert-warning">
+                            No answer was selected for this question.
+                        </div>
+
+                        {% endfor %}
+
+
+                        <!-- Correct Answers -->
+
+                        <h6 class="mt-4">
+                            Correct Answers:
+                        </h6>
+
+                        {% for choice in result.correct_choices %}
+
+                        <div class="answer-item correct-answer">
+
+                            &#10004;
+                            {{ choice.choice_text }}
+
+                        </div>
+
+                        {% empty %}
+
+                        <p class="text-muted">
+                            No correct choices configured.
+                        </p>
+
+                        {% endfor %}
+
+
+                        <!-- Question Result -->
+
+                        {% if result.is_correct %}
+
+                        <div class="alert alert-success mt-3 mb-0">
+
+                            <strong>Correct Answer!</strong>
+
+                            You received full points
+                            for this question.
+
+                        </div>
+
+                        {% else %}
+
+                        <div class="alert alert-danger mt-3 mb-0">
+
+                            <strong>Incorrect Answer!</strong>
+
+                            Review the correct choices above.
+
+                        </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+                {% empty %}
+
+                <div class="alert alert-info">
+                    No exam questions were found.
+                </div>
+
+                {% endfor %}
+
+            </div>
+
         </div>
+
+
+        <!-- TOTAL SCORE SUMMARY -->
+
+        <div class="card result-card mb-4">
+
+            <div class="card-body text-center">
+
+                <h4>Final Examination Summary</h4>
+
+                <hr>
+
+                <h5>
+                    Total Points:
+                    {{ total_points }}
+                </h5>
+
+                <h5>
+                    Points Earned:
+                    {{ score }}
+                </h5>
+
+                <h4 class="mt-3">
+                    Final Grade:
+                    {{ grade }}%
+                </h4>
+
+
+                {% if passed %}
+
+                <span class="badge badge-success p-3 mt-3">
+                    PASSED
+                </span>
+
+                {% else %}
+
+                <span class="badge badge-danger p-3 mt-3">
+                    FAILED
+                </span>
+
+                <div class="mt-4">
+
+                    <a class="btn btn-warning"
+                       href="{% url 'onlinecourse:course_details' course.id %}">
+                        Try Again
+                    </a>
+
+                </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+        <!-- Back Button -->
+
+        <div class="text-center mb-5">
+
+            <a class="btn btn-primary"
+               href="{% url 'onlinecourse:index' %}">
+                Back to Courses
+            </a>
+
+        </div>
+
     </div>
+
 </body>
 </html>
